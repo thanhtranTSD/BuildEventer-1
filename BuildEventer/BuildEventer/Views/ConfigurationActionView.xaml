@@ -53,7 +53,7 @@
                     </Style.Triggers>
                 </Style>
             </Grid.Resources>
-            <GroupBox Header="List Actions:">
+            <GroupBox Header="List Actions:" FontWeight="Bold">
                 <ListBox x:Name="ActionListBox" AllowDrop="False" ItemsSource="{Binding Path=ViewModels,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          IsSynchronizedWithCurrentItem="True"
                          SelectedItem="{Binding SelectedViewModel, Mode=TwoWay}"

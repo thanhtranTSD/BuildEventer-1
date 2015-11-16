@@ -56,8 +56,8 @@ namespace BuildEventer.ViewModels
                 if (m_SelectedItem != value)
                 {
                     m_SelectedItem = value;
+                    OnPropertyChanged("SelectedItem");
                 }
-                OnPropertyChanged("SelectedItem");
             }
         }
 
@@ -72,8 +72,8 @@ namespace BuildEventer.ViewModels
                 if (m_SelectedPath != value)
                 {
                     m_SelectedPath = value;
+                    OnPropertyChanged("SelectedPath");
                 }
-                OnPropertyChanged("SelectedPath");
             }
         }
 
