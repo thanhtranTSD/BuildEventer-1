@@ -51,8 +51,8 @@ namespace BuildEventer.UI
                 if (m_SelectedItem != value)
                 {
                     m_SelectedItem = value;
+                    OnPropertyChanged("SelectedItem");
                 }
-                OnPropertyChanged("SelectedItem");
             }
         }
 

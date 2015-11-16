@@ -13,28 +13,30 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TreeView Grid.Row="1" x:Name="tvExplorer" MinWidth="400" Background="#FFFFFFFF" BorderBrush="#FFFFFFFF" Foreground="#FFFFFFFF"
+        <GroupBox Grid.Row="1" Header="Working Directory" FontWeight="Bold">
+            <TreeView x:Name="tvExplorer" MinWidth="400" Background="#FFFFFFFF" BorderBrush="#FFFFFFFF" Foreground="#FFFFFFFF"
                   ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   ItemsSource="{Binding WorkingDirectoryTreeViewItems}"
                   behaviors:TreeViewHelper.SelectedItem="{Binding SelectedItem}"
                   behaviors:TreeViewHelper.SelectedItemChanged="{Binding SelectedItemChangedCommand}">
-            <TreeView.Resources>
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="HeaderTemplate">
-                        <Setter.Value>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Image Name="img"  Width="20" Height="20" Stretch="Fill" 
+                <TreeView.Resources>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="HeaderTemplate">
+                            <Setter.Value>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Name="img"  Width="20" Height="20" Stretch="Fill" 
                                        Source="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type TreeViewItem}}, 
                                                         Path=Tag, 
                                                         Converter={converter:HeaderToImageConverter}}"/>
-                                    <TextBlock Text="{Binding}" Margin="5,0" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </TreeView.Resources>
-        </TreeView>
+                                        <TextBlock Text="{Binding}" Margin="5,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TreeView.Resources>
+            </TreeView>
+        </GroupBox>
     </Grid>
 </UserControl>
