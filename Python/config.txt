@@ -1,3 +1,4 @@
+NORMAL
 -f
 BuildEventer.xml
 -o

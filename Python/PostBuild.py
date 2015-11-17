@@ -20,7 +20,6 @@ from distutils.file_util import copy_file
 import xml.etree.ElementTree as ET
 
 # Region constansts 
-CONFIG_FILE_NAME         = "config.txt"
 XML_ATTRIBUTE_ACTIONS    = "Actions"
 XML_ATTRIBUTE_NAME       = "Name"
 XML_NODE_DESTINATIONS    = "Destinations"
@@ -30,6 +29,8 @@ PATH_SEPARATOR_CHAR      = "\\"
 PROGRAM_NAME             = "BuildEventer"
 PARSER_PREFIX_CHAR       = '@'
 CONFLICT_HANDLER_RESOLVE = "resolve"
+
+CONFIGURATION_MODE       = "CONFIG"
 #endregion constansts
 
 def GetActionSources(iAction):
@@ -98,31 +99,67 @@ def GetRoot(fileName):
 
 def ArgumentsParser(iArgs):
     parser = argparse.ArgumentParser(prog = PROGRAM_NAME, conflict_handler = CONFLICT_HANDLER_RESOLVE, fromfile_prefix_chars = PARSER_PREFIX_CHAR)
-    parser.add_argument("-f", "--file",
-                        action="store",
-                        dest="m_FileName",
-                        required=True,
-                        help="Input XML file name")
-    parser.add_argument("-o", "--overwrite",
-                        action="store_true",
-                        dest="m_IsOverwritten",
-                        default="False")               
+    # Create the subparsers
+    subparsers = parser.add_subparsers(help='BuildEventer MODE. Type <MODE> -h for helping in a mode.')
+    subparsers.required = True
+    subparsers.dest = 'mode'
+
+    # Create the parser for the "NORMAL" mode
+    parser_execute = subparsers.add_parser("NORMAL", help="NORMAL mode. This mode uses the XML actions configuration file.")
+    parser_execute.add_argument("-f", "--file",
+                                action="store",
+                                dest="normal_mode_file_name",
+                                required=True,
+                                help="Input the XML actions configuration file name")
+    parser_execute.add_argument("-o", "--overwrite",
+                                action="store_true",
+                                dest="is_overwritten",
+                                default="False",
+                                help="Overwrite if the files already exist in the destination folder.")
+
+    # Create the parser for the "CONFIG" mode
+    parser_config = subparsers.add_parser("CONFIG", help="CONFIG mode. This mode uses the TXT arguments configuration file.")
+    parser_config.add_argument("-f", "--file",
+                               action="store",
+                               dest="config_mode_file_name",
+                               required=True,
+                               help="Input the TXT arguments configuration file name.")
 
     try:
         args, remaining_argv = parser.parse_known_args(iArgs)
     except IOError, msg:
         parser.error(str(msg))
+    return args, remaining_argv
+
+def CheckUnkownArgs(iUnknowArgList):
+     # Exit if there is unkown argument
+    if 0 != len(iUnknowArgList):
+        print "Unknown the argument: {}".format(iUnknowArgList) 
+        sys.exit(0)
+
+def ArgumentsProcessing(iArgs):
+    args, remaining_argv = ArgumentsParser(iArgs)
+    CheckUnkownArgs(remaining_argv)
+
+    if CONFIGURATION_MODE == args.mode:
+        if False == os.path.exists(args.config_mode_file_name):
+            print "Configuration file {} does not exist.".format(args.config_mode_file_name)
+            sys.exit(0)
+        try:
+            args, remaining_argv = ArgumentsParser([PARSER_PREFIX_CHAR + args.config_mode_file_name])
+        except:
+            print "Error in the structure of configuration file {}".format(args.config_mode_file_name)
+            sys.exit(0)
+        CheckUnkownArgs(remaining_argv)
+
     return args
 
 # Main function
 def Main(argv):
-    if 1 <= len(argv):
-        args = ArgumentsParser(argv)
-    else:
-        args = ArgumentsParser([PARSER_PREFIX_CHAR + CONFIG_FILE_NAME])
-
-    fileName = args.m_FileName
-    isOverwritten = args.m_IsOverwritten
+    args = ArgumentsProcessing(argv)
+    print args
+    fileName = args.normal_mode_file_name
+    isOverwritten = args.is_overwritten
 
     if True == os.path.exists(fileName):
         root = GetRoot(fileName)
