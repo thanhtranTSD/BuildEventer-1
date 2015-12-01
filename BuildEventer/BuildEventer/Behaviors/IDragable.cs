@@ -13,18 +13,15 @@ limitations under the License.
 </License>
  */
 
-using MahApps.Metro.Controls;
+using System;
 
-namespace BuildEventer.Views
+namespace BuildEventer.Behaviors
 {
-    /// <summary>
-    /// Interaction logic for WorkingDirectoryView.xaml
-    /// </summary>
-    public partial class WorkingDirectoryView : MetroContentControl
+    interface IDragable
     {
-        public WorkingDirectoryView()
-        {
-            InitializeComponent();
-        }
+        /// <summary>
+        /// Type of the data item
+        /// </summary>
+        Type GetType { get; }
     }
 }

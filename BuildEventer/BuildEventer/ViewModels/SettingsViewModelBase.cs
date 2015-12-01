@@ -19,9 +19,9 @@ namespace BuildEventer.ViewModels
 {
     public abstract class SettingsViewModelBase : ViewModelBase
     {
-        public abstract IActionModel Action { get; set; }
+        public abstract IActionModel Action { get; protected set; }
 
-        public abstract bool IsChanged { get; set; }
+        public abstract bool IsChanged { get; }
         // Get the information that an action has enough parameters for executing or not.
         public abstract bool CanExecuteAction { get; }
 

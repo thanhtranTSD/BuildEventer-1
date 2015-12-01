@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="BuildEventer.Views.ActionSourcesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:Behaviors="clr-namespace:BuildEventer.Behaviors"
+             Focusable="True"
+             Behaviors:CommonBehavior.IsFocused="{Binding IsFocused, Mode=TwoWay}">
+    <UserControl.Resources>
+        <!--Defines a context menu-->
+        <ContextMenu x:Key="ItemContextMenuSources">
+            <MenuItem Header="Delete Selected Path"
+                      Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListView}}, Path=DataContext.DeleteSelectedItemCommand}"/>
+        </ContextMenu>
+    </UserControl.Resources>
+    <Grid>
+        <ListView x:Name="lvSources" AllowDrop="True"
+                          Style="{StaticResource VirtualisedMetroListView}"
+                          BorderThickness="0"
+                          SelectionMode="Extended"
+                          ItemsSource="{Binding Sources, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          SelectedIndex="{Binding SelectedIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          SelectedItem="{Binding SelectedItem}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenuSources}" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Path}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <i:Interaction.Behaviors>
+                <Behaviors:FrameworkElementDropBehavior />
+            </i:Interaction.Behaviors>
+        </ListView>
+    </Grid>
+</UserControl>

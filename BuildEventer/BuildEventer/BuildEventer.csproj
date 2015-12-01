@@ -55,9 +55,17 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MahApps.Metro, Version=1.1.3.241, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.1.3-ALPHA241\lib\net45\MahApps.Metro.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.1.3-ALPHA241\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -75,7 +83,32 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviors\FrameworkElementDragBehavior.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Behaviors\FrameworkElementDropBehavior.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Behaviors\IDragable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Behaviors\IDropable.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MainWindowViewModel.cs" />
+    <Compile Include="Models\DragDropModel.cs" />
+    <Compile Include="ViewModels\CopyAction\ActionDestinationsViewModel.cs" />
+    <Compile Include="ViewModels\CopyAction\ActionSourcesViewModel.cs" />
+    <Compile Include="ViewModels\DragDropViewModel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\FileViewModel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\FolderViewModel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Dialog\MessageBoxDialog.cs" />
     <Compile Include="UI\ConfirmActionName\ConfirmActionNameViewModel.cs" />
     <Compile Include="UI\ConfirmActionName\ConfirmActionNameWindow.xaml.cs">
       <DependentUpon>ConfirmActionNameWindow.xaml</DependentUpon>
@@ -88,17 +121,25 @@
       <DependentUpon>StartUpWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\StartUpWindow\StartUpWindowViewModel.cs" />
-    <Compile Include="Utilities\ActionUtility.cs" />
     <Compile Include="ViewModels\ConfigurationActionViewModel.cs" />
-    <Compile Include="ViewModels\CopyActionViewModel.cs" />
+    <Compile Include="ViewModels\CopyAction\CopyActionViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModelBase.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\WorkingDirectoryViewModel.cs" />
+    <Compile Include="Views\CopyAction\ActionDestinationsView.xaml.cs">
+      <DependentUpon>ActionDestinationsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\CopyAction\ActionSourcesView.xaml.cs">
+      <DependentUpon>ActionSourcesView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ConfigurationActionView.xaml.cs">
       <DependentUpon>ConfigurationActionView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\CopyActionView.xaml.cs">
+    <Compile Include="Views\CopyAction\CopyActionView.xaml.cs">
       <DependentUpon>CopyActionView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SelectedActionView.xaml.cs">
+      <DependentUpon>SelectedActionView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WorkingDirectoryView.xaml.cs">
       <DependentUpon>WorkingDirectoryView.xaml</DependentUpon>
@@ -113,7 +154,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Behaviors\CommonBehavior.cs" />
-    <Compile Include="Behaviors\MouseBehavior.cs" />
     <Compile Include="Behaviors\TreeViewHelper.cs" />
     <Compile Include="Command\DelegateCommand.cs" />
     <Compile Include="Converters\HeaderToImageConverter.cs" />
@@ -122,6 +162,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Resources\Icons.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\ConfirmActionName\ConfirmActionNameWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -134,13 +182,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\CopyAction\ActionDestinationsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\CopyAction\ActionSourcesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ConfigurationActionView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\CopyActionView.xaml">
+    <Page Include="Views\CopyAction\CopyActionView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\SelectedActionView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WorkingDirectoryView.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -170,14 +230,22 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <Resource Include="Resources\Entypo.ttf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\WindowsIcons-license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Entypo-license.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

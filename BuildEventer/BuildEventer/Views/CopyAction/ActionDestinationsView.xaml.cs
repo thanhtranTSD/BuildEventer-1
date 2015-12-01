@@ -13,16 +13,16 @@ limitations under the License.
 </License>
  */
 
-using MahApps.Metro.Controls;
+using System.Windows.Controls;
 
 namespace BuildEventer.Views
 {
     /// <summary>
-    /// Interaction logic for WorkingDirectoryView.xaml
+    /// Interaction logic for ActionDestinationsView.xaml
     /// </summary>
-    public partial class WorkingDirectoryView : MetroContentControl
+    public partial class ActionDestinationsView : UserControl
     {
-        public WorkingDirectoryView()
+        public ActionDestinationsView()
         {
             InitializeComponent();
         }

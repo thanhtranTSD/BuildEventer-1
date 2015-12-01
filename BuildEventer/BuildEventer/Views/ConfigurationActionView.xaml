@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vw="clr-namespace:BuildEventer.Views"
              xmlns:behaviors="clr-namespace:BuildEventer.Behaviors"
              mc:Ignorable="d">
     <Grid MinHeight="600">
@@ -15,15 +16,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Grid.Column="0">
-            <GroupBox>
-                <GroupBox.Header>
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBox Text="Action Configuration" FontWeight="Bold"></TextBox>
-                    </StackPanel>
-                </GroupBox.Header>
-                <Grid>
-                    <ContentControl Content="{Binding ActionUI}"/>
-                </Grid>
+            <GroupBox Header="Action Configuration" FontWeight="Bold">
+                <vw:SelectedActionView DataContext="{Binding SelectedActionViewModel, UpdateSourceTrigger=PropertyChanged}" />
             </GroupBox>
         </Grid>
         <Grid Grid.Row="0" Grid.Column="1" >
@@ -54,9 +48,10 @@
                 </Style>
             </Grid.Resources>
             <GroupBox Header="List Actions:" FontWeight="Bold">
-                <ListBox x:Name="ActionListBox" AllowDrop="False" ItemsSource="{Binding Path=ViewModels,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                <ListBox x:Name="ActionListBox" AllowDrop="False" BorderThickness="0"
+                         ItemsSource="{Binding Path=ActionViewModels, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          IsSynchronizedWithCurrentItem="True"
-                         SelectedItem="{Binding SelectedViewModel, Mode=TwoWay}"
+                         SelectedItem="{Binding SelectedActionViewModel, Mode=TwoWay}"
                          SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
                          SelectionMode="Single">
                     <ListBox.Resources>
@@ -67,7 +62,7 @@
                                       CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBox}}}"/>
                         </ContextMenu>
                         <ContextMenu x:Key="ListBoxMenu">
-                            <MenuItem Header="New Action"
+                            <MenuItem Header="New Copy Action"
                                       Command="{Binding CreateActionCommand}"/>
                         </ContextMenu>
                         <!--Sets a context menu for each ListBoxItem in the current ListBox-->
@@ -87,29 +82,13 @@
                 </ListBox>
             </GroupBox>
         </Grid>
-        <Button Grid.Row="1" Grid.Column="0" x:Name="cmdApply" Width="80" Height="30" HorizontalAlignment="Center"
-                Content="Save Changes" Command="{Binding Path=SaveChangedCommand, UpdateSourceTrigger=PropertyChanged}">
-            <Button.Style>
-                <Style TargetType="{x:Type Button}">
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="Blue"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Button.Style>
+        <Button Grid.Row="1" Grid.Column="0" Width="130" Height="30" HorizontalAlignment="Center"
+                Style="{StaticResource ButtonStyle}"
+                Content="Save Action Changes" Command="{Binding Path=SaveChangedCommand, UpdateSourceTrigger=PropertyChanged}">
         </Button>
-        <Button Grid.Row="1" Grid.Column="1" Width="80" Height="30" HorizontalAlignment="Center"
-                Content="New Action" Command="{Binding Path=CreateActionCommand}">
-            <Button.Style>
-                <Style TargetType="{x:Type Button}">
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="Blue"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Button.Style>
+        <Button Grid.Row="1" Grid.Column="1" Width="130" Height="30" HorizontalAlignment="Center"
+                Style="{StaticResource ButtonStyle}"
+                Content="New Copy Action" Command="{Binding Path=CreateActionCommand}">
         </Button>
     </Grid>
 </UserControl>

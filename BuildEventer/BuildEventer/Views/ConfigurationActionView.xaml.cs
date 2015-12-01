@@ -22,9 +22,11 @@ namespace BuildEventer.Views
     /// </summary>
     public partial class ConfigurationActionView : UserControl
     {
+        #region Constructor
         public ConfigurationActionView()
         {
             InitializeComponent();
         }
+        #endregion
     }
 }

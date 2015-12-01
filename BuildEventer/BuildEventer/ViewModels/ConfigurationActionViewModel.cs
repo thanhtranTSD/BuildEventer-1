@@ -14,15 +14,15 @@ limitations under the License.
  */
 
 using BuildEventer.Command;
+using BuildEventer.Dialog;
 using BuildEventer.Models;
 using BuildEventer.UI.ConfirmActionName;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Threading;
 
 namespace BuildEventer.ViewModels
 {
@@ -40,23 +40,17 @@ namespace BuildEventer.ViewModels
         #region Commands
 
         #region CreateActionCommand
-
-        private ICommand m_CreateActionCommand;
-
         public ICommand CreateActionCommand
         {
             get
             {
-                return m_CreateActionCommand ?? (m_CreateActionCommand = new DelegateCommand(param => CreateCopyAction()));
+                return m_CreateActionCommand ?? (m_CreateActionCommand = new DelegateCommand(p => CreateCopyAction()));
             }
         }
 
         #endregion
 
         #region SaveChangedCommand
-
-        private ICommand m_SaveChangedCommand;
-
         public ICommand SaveChangedCommand
         {
             get
@@ -67,20 +61,17 @@ namespace BuildEventer.ViewModels
 
         private void SaveChangedMethod()
         {
-            m_SelectedViewModel.Update();
+            m_SelectedActionViewModel.Update();
         }
 
         private bool CanExecuteSaveChangedCommand()
         {
-            return ((null == m_SelectedViewModel) ? false : m_SelectedViewModel.IsChanged);
+            return ((null == m_SelectedActionViewModel) ? false : m_SelectedActionViewModel.IsChanged);
         }
 
         #endregion
 
         #region DeleteSelectedActionCommand
-
-        private ICommand m_DeleteSelectedActionCommand;
-
         public ICommand DeleteSelectedActionCommand
         {
             get
@@ -93,20 +84,14 @@ namespace BuildEventer.ViewModels
         {
             if (-1 != SelectedIndex)
             {
-                m_SelectedViewModel = null;
-                ViewModels.RemoveAt(SelectedIndex);
-
-                if (0 == m_ViewModels.Count)
-                {
-                    m_ActionUI = null;
-                    OnPropertyChanged("ActionUI");
-                }
+                m_SelectedActionViewModel = null;
+                ActionViewModels.RemoveAt(SelectedIndex);
             }
         }
 
         private bool CanExecuteDeleteSelectedActionCommand()
         {
-            return (0 != m_ViewModels.Count);
+            return (0 != m_ActionViewModels.Count);
         }
 
         #endregion
@@ -115,86 +100,58 @@ namespace BuildEventer.ViewModels
 
         #region Properties
 
-        public ObservableCollection<SettingsViewModelBase> ViewModels
+        public ObservableCollection<SettingsViewModelBase> ActionViewModels
         {
             get
             {
-                if (null == m_ViewModels)
+                if (null == m_ActionViewModels)
                 {
-                    m_ViewModels = new ObservableCollection<SettingsViewModelBase>();
+                    m_ActionViewModels = new ObservableCollection<SettingsViewModelBase>();
                 }
 
-                return m_ViewModels;
+                return m_ActionViewModels;
             }
-            set
+            private set
             {
-                m_ViewModels = value;
-                OnPropertyChanged("ViewModels");
+                m_ActionViewModels = value;
+                OnPropertyChanged("ActionViewModels");
             }
         }
 
-        public SettingsViewModelBase SelectedViewModel
+        public SettingsViewModelBase SelectedActionViewModel
         {
             get
             {
-                return m_SelectedViewModel;
+                return m_SelectedActionViewModel;
             }
             set
             {
-                if ((m_SelectedViewModel != value) && (null != value))
+                if ((m_SelectedActionViewModel != value) || (null == m_SelectedActionViewModel))
                 {
-                    bool isSavedProcess = true;
-                    if (null != m_SelectedViewModel)
+                    if (null != m_SelectedActionViewModel)
                     {
-                        if (true == m_SelectedViewModel.IsChanged)
+                        m_SelectedViewModelValue = value;
+                        if (true == m_SelectedActionViewModel.IsChanged)
                         {
-                            MessageBoxResult result = MessageBox.Show(String.Format("Do you want to save changed in {0}", m_SelectedViewModel.Action.Name), "Confirm",
-                                                                      MessageBoxButton.YesNoCancel,
-                                                                      MessageBoxImage.Question,
-                                                                      MessageBoxResult.Yes);
-                            switch (result)
-                            {
-                                case MessageBoxResult.Yes:
-                                    {
-                                        m_SelectedViewModel.Update();
-                                        isSavedProcess = true;
-                                        break;
-                                    }
-                                case MessageBoxResult.No:
-                                    {
-                                        m_SelectedViewModel.IsChanged = false;
-                                        isSavedProcess = true;
-                                        m_SelectedViewModel.Restore();
-                                        break;
-                                    }
-                                case MessageBoxResult.Cancel:
-                                    {
-                                        isSavedProcess = false;
-                                        m_DispatcherTimer.Start();
-                                        break;
-                                    }
-                            }
+                            MessageBoxDialog messageDialog = new MessageBoxDialog();
+                            messageDialog.Show(SaveChangedCallback, "Confirm", String.Format("Do you want to save changed in {0}?", m_SelectedActionViewModel.Action.Name),
+                                               MessageBoxButton.YesNoCancel);
+                            return;
                         }
-                        if (false == m_SelectedViewModel.CanExecuteAction)
+                        if (false == m_SelectedActionViewModel.CanExecuteAction)
                         {
-                            MessageBoxResult result = MessageBox.Show(String.Format("Sources or destinations of {0} cannot empty.", m_SelectedViewModel.Action.Name), "Warning",
-                                                                          MessageBoxButton.OK,
-                                                                          MessageBoxImage.Warning,
-                                                                          MessageBoxResult.OK);
-                            isSavedProcess = false;
-                            m_DispatcherTimer.Start();
+                            MessageBoxDialog messageDialog = new MessageBoxDialog();
+                            messageDialog.Show(CanExecuteActionCallback, "Warning", String.Format("Sources or destinations of {0} cannot empty.", m_SelectedActionViewModel.Action.Name),
+                                               MessageBoxButton.OK);
+                            return;
                         }
                     }
 
-                    if (true == isSavedProcess)
-                    {
-                        m_SelectedViewModel = value;
-                        m_IsBackup = true;
-                        SettingView();
-                        OnPropertyChanged("ActionUI");
-                        OnPropertyChanged("SelectedViewModel");
-                        OnPropertyChanged("ViewModels");
-                    }
+                    m_SelectedActionViewModel = value;
+                    m_IsBackup = false;
+                    BackupSelectedViewModel();
+                    OnPropertyChanged("SelectedActionViewModel");
+                    OnPropertyChanged("ActionViewModels");
                 }
             }
         }
@@ -212,26 +169,18 @@ namespace BuildEventer.ViewModels
             }
         }
 
-        public UserControl ActionUI
-        {
-            get
-            {
-                return m_ActionUI;
-            }
-        }
-
         #endregion
 
         #region Public Functions
 
         public void GenerateXmlFile()
         {
-            if (null == m_SelectedViewModel)
+            if (null == m_SelectedActionViewModel)
             {
                 return;
             }
 
-            foreach (SettingsViewModelBase vm in m_ViewModels)
+            foreach (SettingsViewModelBase vm in m_ActionViewModels)
             {
                 if (false == vm.CanExecuteAction)
                 {
@@ -242,24 +191,24 @@ namespace BuildEventer.ViewModels
             string path = XMLManager.GetPathToSaveFile();
             if (null != path)
             {
-                XMLManager.GenerateXmlFile(path, m_ViewModels);
+                XMLManager.GenerateXmlFile(path, m_ActionViewModels);
             }
         }
 
         public void LoadXmlFile()
         {
-            if (null != m_SelectedViewModel)
+            if (null != m_SelectedActionViewModel)
             {
-                m_SelectedViewModel = null;
+                m_SelectedActionViewModel = null;
             }
 
             string path = XMLManager.GetPathToLoadFile();
 
             if (null != path)
             {
-                ViewModels.Clear();
-                ViewModels = XMLManager.LoadXmlFile(path);
-                SelectedViewModelsIndex(m_ViewModels.Count - 1);
+                ActionViewModels.Clear();
+                ActionViewModels = XMLManager.LoadXmlFile(path);
+                SelectedViewModelsIndex(m_ActionViewModels.Count - 1);
             }
         }
 
@@ -267,18 +216,65 @@ namespace BuildEventer.ViewModels
 
         #region Private Functions
 
+        #region Callback functions
+        private void SaveChangedCallback(MessageBoxResultButton result)
+        {
+            bool isSavedProcess = true;
+            switch (result)
+            {
+                // Yes
+                case MessageBoxResultButton.Yes:
+                    {
+                        m_SelectedActionViewModel.Update();
+                        isSavedProcess = true;
+                        break;
+                    }
+                // No
+                case MessageBoxResultButton.No:
+                    {
+                        isSavedProcess = true;
+                        m_SelectedActionViewModel.Restore();
+                        break;
+                    }
+                // Cancel
+                case MessageBoxResultButton.Cancel:
+                    {
+                        isSavedProcess = false;
+                        Task task = new Task(() =>
+                        {
+                            SelectedViewModelsIndex(m_ActionViewModels.IndexOf(m_SelectedActionViewModel));
+                        });
+                        task.Wait(50);
+                        task.Start();
+                        break;
+                    }
+            }
+            if (true == isSavedProcess)
+            {
+                m_SelectedActionViewModel = m_SelectedViewModelValue;
+                m_IsBackup = false;
+                BackupSelectedViewModel();
+                OnPropertyChanged("SelectedViewModel");
+                OnPropertyChanged("ActionViewModels");
+            }
+        }
+
+        private void CanExecuteActionCallback(MessageBoxResultButton result)
+        {
+            Task task = new Task(() =>
+            {
+                SelectedViewModelsIndex(m_ActionViewModels.IndexOf(m_SelectedActionViewModel));
+            });
+            task.Wait(50);
+            task.Start();
+        }
+        #endregion
+
         private void Initialize()
         {
             Factories.SettingsViewModelFactory.Instance().Initialize();
 
-            m_ViewModels = new ObservableCollection<SettingsViewModelBase>();
-            List<Type> m_ActionTypes = Utilities.ActionUtility.GetAllActionTypes();
-
-            m_AllViewModels = Utilities.ActionUtility.GetAllViewModels();
-
-            m_DispatcherTimer = new System.Windows.Threading.DispatcherTimer();
-            m_DispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick);
-            m_DispatcherTimer.Interval = TimeSpan.FromMilliseconds(10);
+            m_ActionViewModels = new ObservableCollection<SettingsViewModelBase>();
         }
 
         private bool CheckCompletedActionViewModel(SettingsViewModelBase actionViewModel)
@@ -287,10 +283,6 @@ namespace BuildEventer.ViewModels
             {
                 if ((true == actionViewModel.IsChanged) || (false == actionViewModel.CanExecuteAction))
                 {
-                    MessageBoxResult result = MessageBox.Show(String.Format("Cannot create new action now. The action {0} must be completed first.", actionViewModel.Action.Name), "Information",
-                                                                          MessageBoxButton.OK,
-                                                                          MessageBoxImage.Information,
-                                                                          MessageBoxResult.OK);
                     return false;
                 }
             }
@@ -299,10 +291,10 @@ namespace BuildEventer.ViewModels
 
         private void CreateCopyAction()
         {
-            bool isComplete = CheckCompletedActionViewModel(m_SelectedViewModel);
+            bool isComplete = CheckCompletedActionViewModel(m_SelectedActionViewModel);
             if (true == isComplete)
             {
-                ConfirmActionNameViewModel confirmActionNameVM = new ConfirmActionNameViewModel(m_ViewModels);
+                ConfirmActionNameViewModel confirmActionNameVM = new ConfirmActionNameViewModel(m_ActionViewModels);
                 ConfirmActionNameWindow confirmActionNameWindow = new ConfirmActionNameWindow();
                 confirmActionNameWindow.DataContext = confirmActionNameVM;
 
@@ -312,14 +304,20 @@ namespace BuildEventer.ViewModels
 
                     CopyActionModel action = new CopyActionModel();
                     action.Name = defaultActionName;
-                    action.Sources = new ObservableCollection<DragDropData>();
-                    action.Destinations = new ObservableCollection<DragDropData>();
+                    action.Sources = new List<DragDropData>();
+                    action.Destinations = new List<DragDropData>();
 
                     CopyActionViewModel actionVM = new CopyActionViewModel(action);
-                    ViewModels.Add(actionVM);
+                    ActionViewModels.Add(actionVM);
 
-                    SelectedViewModelsIndex(m_ViewModels.Count - 1);
+                    SelectedViewModelsIndex(m_ActionViewModels.Count - 1);
                 }
+            }
+            else
+            {
+                MessageBoxDialog messageDialog = new MessageBoxDialog();
+                messageDialog.Show(CanExecuteActionCallback, "Information", String.Format("Cannot create new action now. The action {0} must be completed or saved first.", m_SelectedActionViewModel.Action.Name),
+                                   MessageBoxButton.OK);
             }
         }
 
@@ -328,46 +326,31 @@ namespace BuildEventer.ViewModels
             SelectedIndex = index;
         }
 
-        private void SettingView()
+        private void BackupSelectedViewModel()
         {
-            if (null == m_SelectedViewModel)
+            if (null != m_SelectedActionViewModel)
             {
-                m_ActionUI = null;
-            }
-            else
-            {
-                if (true == m_IsBackup)
+                if (false == m_IsBackup)
                 {
-                    m_IsBackup = false;
-                    m_SelectedViewModel.Backup();
+                    m_IsBackup = true;
+                    m_SelectedActionViewModel.Backup();
                 }
-                m_ActionUI = m_AllViewModels[m_SelectedViewModel.GetType()];
-
-                m_ActionUI.DataContext = m_SelectedViewModel;
             }
-        }
-
-        private void DispatcherTimer_Tick(object sender, EventArgs e)
-        {
-            SelectedIndex = m_ViewModels.IndexOf(m_SelectedViewModel);
-            m_DispatcherTimer.Stop();
         }
 
         #endregion
 
         #region Members
-
         private bool m_IsBackup;
         private int m_SelectedIndex;
 
-        private UserControl m_ActionUI;
+        private ObservableCollection<SettingsViewModelBase> m_ActionViewModels;
+        private SettingsViewModelBase m_SelectedActionViewModel;
+        private SettingsViewModelBase m_SelectedViewModelValue;
 
-        private ObservableCollection<SettingsViewModelBase> m_ViewModels;
-        private SettingsViewModelBase m_SelectedViewModel;
-        private Dictionary<Type, UserControl> m_AllViewModels = new Dictionary<Type, UserControl>();
-
-        private DispatcherTimer m_DispatcherTimer;
-
+        private ICommand m_CreateActionCommand;
+        private ICommand m_SaveChangedCommand;
+        private ICommand m_DeleteSelectedActionCommand;
         #endregion
     }
 }

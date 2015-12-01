@@ -78,7 +78,6 @@ namespace BuildEventer.UI.ConfirmActionName
         #region Commands
 
         #region NewNameCommand
-        private ICommand m_NewNameCommand;
 
         public ICommand NewNameCommand
         {
@@ -106,7 +105,6 @@ namespace BuildEventer.UI.ConfirmActionName
         #endregion
 
         #region DefaultCommand
-        private ICommand m_DefaultCommand;
 
         public ICommand DefaultCommand
         {
@@ -190,6 +188,9 @@ namespace BuildEventer.UI.ConfirmActionName
         private List<SettingsViewModelBase> m_ListViewModels;
         private bool? m_DialogResult;
         private bool m_IsValidNewName;
+
+        private ICommand m_NewNameCommand;
+        private ICommand m_DefaultCommand;
         #endregion
 
         #region Constants

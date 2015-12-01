@@ -1,2 +1,4 @@
 /BuildEventer/BuildEventer/obj
 /BuildEventer/BuildEventer/bin
+BuildEventer/packages/
+BuildEventer/BuildEventer/packages.config

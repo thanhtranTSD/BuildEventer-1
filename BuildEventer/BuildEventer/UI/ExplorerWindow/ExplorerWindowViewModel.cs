@@ -118,7 +118,6 @@ namespace BuildEventer.UI
         #endregion
 
         #region LoadedCommand
-        private ICommand m_LoadedCommand;
 
         public ICommand LoadedCommand
         {
@@ -188,6 +187,8 @@ namespace BuildEventer.UI
         private static object dummyNode;
         private object m_SelectedItem;
         private bool? m_DialogResult;
+
+        private ICommand m_LoadedCommand;
 
         #endregion
 
