@@ -55,18 +55,16 @@ namespace BuildEventer.UI
 
         #region Commands
 
-        #region BtnBrowser_Click Command
-        private ICommand m_BtnBrowserClick;
-
-        public ICommand BtnBrowserClick
+        #region BrowserCommand
+        public ICommand BrowserCommand
         {
             get
             {
-                return m_BtnBrowserClick ?? (m_BtnBrowserClick = new DelegateCommand(p => BtnBrowser_Click((RoutedEventArgs)p)));
+                return m_BrowserCommand ?? (m_BrowserCommand = new DelegateCommand(p => OnBrowserCommand((RoutedEventArgs)p)));
             }
         }
 
-        private void BtnBrowser_Click(RoutedEventArgs e)
+        private void OnBrowserCommand(RoutedEventArgs e)
         {
             ExplorerWindow explorerWindow = new ExplorerWindow();
             if (true == explorerWindow.ShowDialog())
@@ -106,6 +104,8 @@ namespace BuildEventer.UI
         #region Members
         private bool m_IsPathValid;
         private string m_WorkingDirectoryPath;
+
+        private ICommand m_BrowserCommand;
         #endregion
 
         #region Constants

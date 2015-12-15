@@ -1,34 +1,38 @@
-﻿<Window x:Class="BuildEventer.UI.StartUpWindow"
+﻿<Controls:MetroWindow x:Class="BuildEventer.UI.StartUpWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:behaviors="clr-namespace:BuildEventer.Behaviors"
-        Title="Choose working directory"
+        Title="Choose workspace directory"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize" FontSize="14"
         WindowStyle="ToolWindow"
-        Loaded="Window_Loaded"
-        KeyDown="Window_KeyDown">
+        KeyDown="Window_KeyDown"
+        ShowCloseButton="False"
+        Background="White">
     <Grid>
         <StackPanel Orientation="Vertical" Margin="10,5,5,10">
-            <TextBlock>Please input working directory:</TextBlock>
+            <TextBlock>Please input workspace directory:</TextBlock>
             <DockPanel>
                 <TextBox x:Name="SelectedPath" DockPanel.Dock="Left" BorderThickness="2" Width="700" Height="27"
-                             TextWrapping="WrapWithOverflow"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Disabled"
-                             Text="{Binding WorkingDirectoryPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                             Validation.ErrorTemplate="{x:Null}"/>
+                         TextWrapping="WrapWithOverflow"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Disabled"
+                         Text="{Binding WorkingDirectoryPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                         Validation.ErrorTemplate="{x:Null}"/>
                 <Button DockPanel.Dock="Left" Width="30"
+                        Style="{StaticResource ButtonStyle}"
                         Content="..."
-                        Command="{Binding BtnBrowserClick}"/>
+                        Command="{Binding BrowserCommand}"/>
                 <Button DockPanel.Dock="Right" IsDefault="True" Width="60" Margin="10,0,5,0"
-                    Content="_Ok"
-                    IsEnabled="{Binding IsPathValid, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                    Click="ButtonOk_Click"/>
+                        Style="{StaticResource ButtonStyle}"
+                        Content="OK"
+                        IsEnabled="{Binding IsPathValid, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                        Click="ButtonOk_Click"/>
             </DockPanel>
             <Label FontWeight="Bold"
                    Foreground="Red"
                    Content="{Binding ElementName=SelectedPath, Path=(Validation.Errors).CurrentItem.ErrorContent}"/>
         </StackPanel>
     </Grid>
-</Window>
+</Controls:MetroWindow>

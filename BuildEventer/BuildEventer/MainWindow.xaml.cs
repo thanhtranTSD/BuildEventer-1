@@ -13,6 +13,8 @@ limitations under the License.
 </License>
  */
 
+using BuildEventer.Dialog;
+using MahApps.Metro.Controls;
 using System.Windows;
 
 namespace BuildEventer
@@ -20,7 +22,7 @@ namespace BuildEventer
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         #region Constructor
         public MainWindow()
@@ -31,16 +33,21 @@ namespace BuildEventer
         #endregion
 
         #region Events
-
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Do you really want to quit?", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.No)
-            {
-                e.Cancel = true;
-            }
+            e.Cancel = true;
+
+            MessageBoxDialog messageDialog = new MessageBoxDialog();
+            messageDialog.Show(QuitApplication, "Quit application?", "Do you want to quit application?", MessageBoxButton.YesNo);
         }
 
+        private void QuitApplication(MessageBoxResultButton result)
+        {
+            if (MessageBoxResultButton.Yes == result)
+            {
+                Application.Current.Shutdown();
+            }
+        }
         #endregion
     }
 }

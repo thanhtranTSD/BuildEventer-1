@@ -28,7 +28,6 @@ namespace BuildEventer
         {
             string workingDirectoryPath = GetWorkingingDirectoryPath();
             WorkingDirectoryViewDataContext = new WorkingDirectoryViewModel(workingDirectoryPath);
-
             m_ConfigurationActionViewDataContext = new ConfigurationActionViewModel();
         }
         #endregion
@@ -54,8 +53,6 @@ namespace BuildEventer
 
         #region GenerateXML Command
 
-        private ICommand m_GenerateXMLCommand;
-
         public ICommand GenerateXMLCommand
         {
             get
@@ -74,15 +71,13 @@ namespace BuildEventer
         /// </summary>
         private bool CanExecuteGenerateXMLCommand()
         {
-            bool isActionCanExecute = (null == m_ConfigurationActionViewDataContext.SelectedViewModel) ? false : m_ConfigurationActionViewDataContext.SelectedViewModel.CanExecuteAction;
-            return ((0 != m_ConfigurationActionViewDataContext.ViewModels.Count) && (true == isActionCanExecute));
+            bool isActionCanExecute = (null == m_ConfigurationActionViewDataContext.SelectedActionViewModel) ? false : m_ConfigurationActionViewDataContext.SelectedActionViewModel.CanExecuteAction;
+            return ((0 != m_ConfigurationActionViewDataContext.ActionViewModels.Count) && (true == isActionCanExecute));
         }
 
         #endregion
 
         #region LoadXML Command
-
-        private ICommand m_LoadXMLCommand;
 
         public ICommand LoadXMLCommand
         {
@@ -99,8 +94,6 @@ namespace BuildEventer
         #endregion
 
         #region Exit Command
-
-        private ICommand m_ExitCommand;
 
         public ICommand ExitCommand
         {
@@ -138,6 +131,10 @@ namespace BuildEventer
 
         #region Members
         private ConfigurationActionViewModel m_ConfigurationActionViewDataContext;
+
+        private ICommand m_GenerateXMLCommand;
+        private ICommand m_LoadXMLCommand;
+        private ICommand m_ExitCommand;
         #endregion
     }
 }

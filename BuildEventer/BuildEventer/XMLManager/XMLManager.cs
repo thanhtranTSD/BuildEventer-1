@@ -151,17 +151,14 @@ namespace BuildEventer
             string viewModelName = actionViewModel.GetType().Name;
 
             eActionViewModel enumViewModel = ParseEnum<eActionViewModel>(viewModelName);
-            if (null != enumViewModel)
+            switch (enumViewModel)
             {
-                switch (enumViewModel)
-                {
-                    case eActionViewModel.CopyActionViewModel:
-                        {
-                            actionsNode.AppendChild(CopyActionViewModelToXMLNode((CopyActionViewModel)actionViewModel, ref document));
-                            break;
-                        }
-                    default: break;
-                }
+                case eActionViewModel.CopyActionViewModel:
+                    {
+                        actionsNode.AppendChild(CopyActionViewModelToXMLNode((CopyActionViewModel)actionViewModel, ref document));
+                        break;
+                    }
+                default: break;
             }
         }
 
@@ -169,7 +166,7 @@ namespace BuildEventer
         /// <summary>
         /// Create a node from a list of paths
         /// </summary>
-        private static XmlNode PathsToXMLNode(ObservableCollection<DragDropData> listPath, string nodeName, ref XmlDocument document)
+        private static XmlNode PathsToXMLNode(List<DragDropData> listPath, string nodeName, ref XmlDocument document)
         {
             XmlElement xmlNode = document.CreateElement(nodeName);
 

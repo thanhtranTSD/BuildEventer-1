@@ -13,14 +13,12 @@ limitations under the License.
 </License>
  */
 
-using BuildEventer.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace BuildEventer.Models
 {
-    public class CopyActionModel : ViewModelBase, IActionModel
+    public class CopyActionModel : IActionModel
     {
 
         #region Constructors
@@ -39,8 +37,8 @@ namespace BuildEventer.Models
         public CopyActionModel(string name, List<DragDropData> sources, List<DragDropData> destinations)
             : this(name)
         {
-            m_Sources = new ObservableCollection<DragDropData>(sources);
-            m_Destinations = new ObservableCollection<DragDropData>(destinations);
+            m_Sources = sources;
+            m_Destinations = destinations;
         }
         #endregion
 
@@ -53,7 +51,6 @@ namespace BuildEventer.Models
                 if (m_Name != value)
                 {
                     m_Name = value;
-                    OnPropertyChanged("Name");
                 }
             }
         }
@@ -68,7 +65,7 @@ namespace BuildEventer.Models
             get { return this.GetType(); }
         }
 
-        public ObservableCollection<DragDropData> Sources
+        public List<DragDropData> Sources
         {
             get { return m_Sources; }
             set
@@ -76,12 +73,11 @@ namespace BuildEventer.Models
                 if (m_Sources != value)
                 {
                     m_Sources = value;
-                    OnPropertyChanged("Sources");
                 }
             }
         }
 
-        public ObservableCollection<DragDropData> Destinations
+        public List<DragDropData> Destinations
         {
             get { return m_Destinations; }
             set
@@ -89,7 +85,6 @@ namespace BuildEventer.Models
                 if (m_Destinations != value)
                 {
                     m_Destinations = value;
-                    OnPropertyChanged("Destinations");
                 }
             }
         }
@@ -98,8 +93,8 @@ namespace BuildEventer.Models
         #region Members
         private string m_Name;
         private string m_Type;
-        private ObservableCollection<DragDropData> m_Sources;
-        private ObservableCollection<DragDropData> m_Destinations;
+        private List<DragDropData> m_Sources;
+        private List<DragDropData> m_Destinations;
         #endregion
 
         #region Constants

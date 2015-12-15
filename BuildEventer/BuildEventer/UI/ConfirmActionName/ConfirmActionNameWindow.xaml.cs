@@ -20,7 +20,7 @@ namespace BuildEventer.UI.ConfirmActionName
     /// <summary>
     /// Interaction logic for Confirm_Action.xaml
     /// </summary>
-    public partial class ConfirmActionNameWindow : Window
+    public partial class ConfirmActionNameWindow
     {
         #region Constructors
 

@@ -13,264 +13,95 @@ limitations under the License.
 </License>
  */
 
-using BuildEventer.Behaviors;
-using BuildEventer.Command;
-using BuildEventer.Models;
-using BuildEventer.Views;
-using System;
-using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 
 namespace BuildEventer.ViewModels
 {
     public class WorkingDirectoryViewModel : ViewModelBase
     {
         #region Constructor
-
         public WorkingDirectoryViewModel(string workingDirectory)
         {
             m_WorkingDirectory = workingDirectory;
+            WorkingDirectoryInitialize();
         }
-
         #endregion
 
         #region Properties
-
-        public object SelectedItem
-        {
-            get
-            {
-                if (null == m_SelectedItem)
-                {
-                    m_SelectedItem = new object();
-                }
-                return m_SelectedItem;
-            }
-            set
-            {
-                if (m_SelectedItem != value)
-                {
-                    m_SelectedItem = value;
-                    OnPropertyChanged("SelectedItem");
-                }
-            }
-        }
-
-        public string SelectedPath
-        {
-            get
-            {
-                return m_SelectedPath;
-            }
-            set
-            {
-                if (m_SelectedPath != value)
-                {
-                    m_SelectedPath = value;
-                    OnPropertyChanged("SelectedPath");
-                }
-            }
-        }
-
-        public BindingList<TreeViewItem> WorkingDirectoryTreeViewItems
-        {
-            get
-            {
-                return m_WorkingDirectoryTreeViewItems;
-            }
-        }
-
-        #endregion
-
-        #region Commands
-
-        #region SelectedItemChangedCommand
-
-        public DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs> SelectedItemChangedCommand
-        {
-            get
-            {
-                return m_SelectedItemChangedCommand ?? (m_SelectedItemChangedCommand = new DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs>(TreeViewItemSelectedChangedCallBack));
-            }
-        }
-
-        private void TreeViewItemSelectedChangedCallBack(TreeViewHelper.DependencyPropertyEventArgs e)
-        {
-            if ((null != e) && (null != e.DependencyPropertyChangedEventArgs.NewValue))
-            {
-                TreeViewItem treeViewItem = e.DependencyPropertyChangedEventArgs.NewValue as TreeViewItem;
-                string header = treeViewItem.Header.ToString();
-                string tag = treeViewItem.Tag.ToString();
-            }
-        }
-
-        #endregion
-
-        #region MouseMoveCommand
-        private ICommand m_MouseMoveCommand;
-
-        public ICommand MouseMoveCommand
-        {
-            get
-            {
-                return m_MouseMoveCommand ?? (m_MouseMoveCommand = new DelegateCommand<MouseEventArgs>(param => ExecuteMouseMove((MouseEventArgs)param)));
-            }
-        }
-
-        private void ExecuteMouseMove(MouseEventArgs e)
-        {
-            WorkingDirectoryView explorerView = e.Source as WorkingDirectoryView;
-            if ((null != explorerView) && (e.LeftButton == MouseButtonState.Pressed))
-            {
-                TreeViewItem treeviewItem = FindAncestor<TreeViewItem>((DependencyObject)e.OriginalSource);
-                if (null != treeviewItem)
-                {
-                    string fullPath = (string)treeviewItem.Tag;
-
-                    string relativePath = GetRelativePath(fullPath);
-
-                    if (string.Empty != relativePath)
-                    {
-                        DragDropData data = new DragDropData(relativePath, Directory.Exists(fullPath));
-                        DragDrop.DoDragDrop(treeviewItem, data, DragDropEffects.Copy);
-                    }
-                }
-            }
-        }
-
-        private string GetRelativePath(string fullPath)
-        {
-            if (null == fullPath)
-            {
-                return null;
-            }
-            return fullPath.Substring(m_WorkingDirectory.Length, fullPath.Length - m_WorkingDirectory.Length);
-        }
-        #endregion MouseMoveCommand
-
-        #region LoadedCommand
-        private ICommand m_TreeViewLoadedCommand;
-
-        public ICommand TreeViewLoadedCommand
-        {
-            get
-            {
-                return m_TreeViewLoadedCommand ?? (m_TreeViewLoadedCommand = new DelegateCommand(param => TreeViewLoaded((RoutedEventArgs)param)));
-            }
-        }
-        #endregion LoadedCommand
-
-        #endregion
-
-        #region Public Functions
-
-        public void SetWorkingDirectory(string workingDirectory)
-        {
-            m_WorkingDirectory = workingDirectory;
-        }
-
+        public ObservableCollection<DragDropViewModel> WorkingDirectoryItems { get; private set; }
         #endregion
 
         #region Private Functions
-
-        // Helper to search up the VisualTree
-        private T FindAncestor<T>(DependencyObject current) where T : DependencyObject
+        private void WorkingDirectoryInitialize()
         {
-            do
+            WorkingDirectoryItems = new ObservableCollection<DragDropViewModel>();
+
+            if (null != m_WorkingDirectory)
             {
-                if (current is T)
-                {
-                    return (T)current;
-                }
-                current = VisualTreeHelper.GetParent(current);
-            } while (null != current);
-
-            return null;
-        }
-
-        private void FindDropTarget(TreeView treeView, out TreeViewItem itemNode, DragEventArgs dragEventArgs)
-        {
-            itemNode = null;
-
-            DependencyObject k = VisualTreeHelper.HitTest(treeView, dragEventArgs.GetPosition(treeView)).VisualHit;
-
-            while (null != k)
-            {
-                if (k is TreeViewItem)
-                {
-                    TreeViewItem treeNode = k as TreeViewItem;
-                    itemNode = treeNode;
-                }
-                else if (k == treeView)
+                if (false == Directory.Exists(m_WorkingDirectory))
                 {
                     return;
                 }
 
-                k = VisualTreeHelper.GetParent(k);
+                string fullPath = Path.GetFullPath(m_WorkingDirectory);
+                string shortPath = GetShortPath(fullPath, WORKING_DIRECTORY_LENGHT);
+
+                WorkingDirectoryItems.Add(GetFolderFromPath(shortPath, fullPath, null));
             }
         }
 
-        private void FolderExpanded(object sender, RoutedEventArgs e)
+        private void FolderExpanded(object sender)
         {
-            TreeViewItem item = (TreeViewItem)sender;
-            if ((1 == item.Items.Count) && (item.Items[0] == m_DummyNode))
-            {
-                item.Items.Clear();
-                foreach (string s in Directory.GetDirectories(item.Tag.ToString()))
-                {
-                    TreeViewItem subitem = new TreeViewItem();
-                    subitem.Header = s.Substring(s.LastIndexOf(PATH_SEPARATOR_CHAR) + 1);
-                    subitem.Tag = s;
-                    subitem.FontWeight = FontWeights.Normal;
-                    subitem.Items.Add(m_DummyNode);
-                    subitem.Expanded += new RoutedEventHandler(FolderExpanded);
-                    item.Items.Add(subitem);
+            FolderViewModel folder = (FolderViewModel)sender;
+            string folderPath = folder.Data.FullPath.ToString();
 
+            if (false == Directory.Exists(folderPath))
+            {
+                return;
+            }
+
+            if (((1 == folder.Items.Count) && (folder.Items[0] == m_EmptyFolder)))
+            {
+                folder.Items.Clear();
+                foreach (string dirPath in Directory.GetDirectories(folder.Data.FullPath.ToString()))
+                {
+                    string path = dirPath.Substring(dirPath.LastIndexOf(PATH_SEPARATOR_CHAR) + 1);
+                    string relativePath = GetRelativePath(dirPath);
+                    folder.Add(GetFolderFromPath(path, dirPath, relativePath, folder));
                 }
 
-                foreach (string file in Directory.GetFiles(item.Tag.ToString()))
+                foreach (string filePath in Directory.GetFiles(folder.Data.FullPath.ToString()))
                 {
-                    TreeViewItem fileItem = new TreeViewItem();
-                    fileItem.Header = file.Substring(file.LastIndexOf(PATH_SEPARATOR_CHAR) + 1);
-                    fileItem.Tag = file;
-                    fileItem.FontWeight = FontWeights.Normal;
-                    item.Items.Add(fileItem);
+                    string pathFile = filePath.Substring(filePath.LastIndexOf(PATH_SEPARATOR_CHAR) + 1);
+                    string relativePath = GetRelativePath(filePath);
+                    FileViewModel file = new FileViewModel(pathFile, filePath, relativePath);
+                    folder.Add(file);
                 }
             }
         }
 
-        private void TreeViewLoaded(RoutedEventArgs e)
+        private bool IsEmptyFolder(string folderPath)
         {
-            m_WorkingDirectoryTreeViewItems = new BindingList<TreeViewItem>();
+            return (false == Directory.EnumerateFileSystemEntries(folderPath, "*", SearchOption.TopDirectoryOnly).Any());
+        }
 
-            if (null != m_WorkingDirectory)
+        private FolderViewModel GetFolderFromPath(string path, string fullPath, string relativePath, FolderViewModel parent = null)
+        {
+            FolderViewModel folder = new FolderViewModel(path, fullPath, relativePath, parent);
+            if (false == IsEmptyFolder(fullPath))
             {
-                bool hasDir = Directory.Exists(m_WorkingDirectory);
-
-                string path = Path.GetFullPath(m_WorkingDirectory);
-                string shortPath = ShortPath(path, WORKING_DIRECTORY_LENGHT);
-
-                TreeViewItem item = new TreeViewItem();
-                item.Header = shortPath;
-                item.Tag = path;
-                item.FontWeight = FontWeights.Normal;
-                item.Items.Add(m_DummyNode);
-                item.Expanded += new RoutedEventHandler(FolderExpanded);
-
-                m_WorkingDirectoryTreeViewItems.Add(item);
+                folder.Add(m_EmptyFolder);
+                folder.Expanded += FolderExpanded;
             }
-            OnPropertyChanged("WorkingDirectoryTreeViewItems");
+            return folder;
         }
 
         /// <summary>
         /// Help to reduce the lenght of path.
         /// </summary>
-        private string ShortPath(string fullPath, int lenght)
+        private string GetShortPath(string fullPath, int lenght)
         {
             string[] pathItems = fullPath.Split(Path.DirectorySeparatorChar);
             if ((lenght >= fullPath.Length) || (PATH_ITEM_LEVEL >= pathItems.Length))
@@ -284,21 +115,24 @@ namespace BuildEventer.ViewModels
                 pathItems[REPLACE_POSITION] = SHORT_PATH_SYMBOL;
                 string newFullPath = Path.Combine(pathItems);
 
-                return ShortPath(newFullPath, lenght);
+                return GetShortPath(newFullPath, lenght);
             }
         }
 
+        private string GetRelativePath(string fullPath)
+        {
+            if (null == fullPath)
+            {
+                return null;
+            }
+            return fullPath.Substring(m_WorkingDirectory.Length, fullPath.Length - m_WorkingDirectory.Length);
+        }
         #endregion
 
         #region Members
-        private string m_SelectedPath;
-        private BindingList<TreeViewItem> m_WorkingDirectoryTreeViewItems;
-
-        private object m_DummyNode;
+        private FolderViewModel m_EmptyFolder;
 
         public string m_WorkingDirectory;
-        private object m_SelectedItem;
-        private DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs> m_SelectedItemChangedCommand;
         #endregion
 
         #region Constants

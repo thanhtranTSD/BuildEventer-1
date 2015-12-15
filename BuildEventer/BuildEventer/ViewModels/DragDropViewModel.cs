@@ -13,18 +13,20 @@ limitations under the License.
 </License>
  */
 
-using MahApps.Metro.Controls;
-
-namespace BuildEventer.Views
+using BuildEventer.Models;
+namespace BuildEventer.ViewModels
 {
-    /// <summary>
-    /// Interaction logic for WorkingDirectoryView.xaml
-    /// </summary>
-    public partial class WorkingDirectoryView : MetroContentControl
+    public abstract class DragDropViewModel
     {
-        public WorkingDirectoryView()
+        #region Constructor
+        public DragDropViewModel(string path, string fullPath, string relativePath)
         {
-            InitializeComponent();
+            Data = new DragDropModel(path, fullPath, relativePath);
         }
+        #endregion
+
+        #region Properties
+        public DragDropModel Data { get; private set; }
+        #endregion
     }
 }

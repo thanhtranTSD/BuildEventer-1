@@ -80,6 +80,7 @@ namespace BuildEventer.Behaviors
             }
             uie.Focus();
             uie.LostFocus += UieOnLostFocus;
+            uie.UpdateLayout();
         }
 
         private static void UieOnLostFocus(object sender, RoutedEventArgs routedEventArgs)

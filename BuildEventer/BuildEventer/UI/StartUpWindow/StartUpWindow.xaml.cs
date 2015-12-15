@@ -24,15 +24,8 @@ namespace BuildEventer.UI
     /// <summary>
     /// Interaction logic for StartUpDialogue.xaml
     /// </summary>
-    public partial class StartUpWindow : Window
+    public partial class StartUpWindow
     {
-        #region Import DLL
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-        [DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-        #endregion
-
         #region Constructor
         public StartUpWindow()
         {
@@ -42,12 +35,6 @@ namespace BuildEventer.UI
         #endregion
 
         #region Events
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            IntPtr hwnd = new WindowInteropHelper(this).Handle;
-            SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) & ~WS_SYSMENU);
-        }
-
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if ((e.Key == Key.System) && (e.SystemKey == Key.F4))
@@ -60,11 +47,6 @@ namespace BuildEventer.UI
         {
             DialogResult = true;
         }
-        #endregion
-
-        #region Constants
-        private const int GWL_STYLE = -16;
-        private const int WS_SYSMENU = 0x80000;
         #endregion
     }
 }
