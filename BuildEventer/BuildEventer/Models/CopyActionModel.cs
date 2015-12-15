@@ -13,6 +13,7 @@ limitations under the License.
 </License>
  */
 
+using BuildEventerDAL.Data;
 using System;
 using System.Collections.Generic;
 
@@ -39,6 +40,13 @@ namespace BuildEventer.Models
         {
             m_Sources = sources;
             m_Destinations = destinations;
+        }
+
+        public CopyActionModel(CopyActionData copyActionData)
+        {
+            m_Name = copyActionData.Name;
+            m_Sources = CoverterToDragDropData(copyActionData.Sources);
+            m_Destinations = CoverterToDragDropData(copyActionData.Destinations);
         }
         #endregion
 
@@ -87,6 +95,18 @@ namespace BuildEventer.Models
                     m_Destinations = value;
                 }
             }
+        }
+        #endregion
+
+        #region Private Function
+        private List<DragDropData> CoverterToDragDropData(List<string> paths)
+        {
+            List<DragDropData> returnList = new List<DragDropData>();
+            foreach (string path in paths)
+            {
+                returnList.Add(new DragDropData(path));
+            }
+            return returnList;
         }
         #endregion
 
