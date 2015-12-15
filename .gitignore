@@ -2,3 +2,5 @@
 /BuildEventer/BuildEventer/bin
 BuildEventer/packages/
 BuildEventer/BuildEventer/packages.config
+PostBuild/PostBuild/bin/
+PostBuild/PostBuild/obj/
