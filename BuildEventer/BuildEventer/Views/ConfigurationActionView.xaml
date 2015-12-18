@@ -74,6 +74,9 @@
                             <Setter Property="ContextMenu" Value="{StaticResource ListBoxMenu}"/>
                         </Style>
                     </ListBox.Resources>
+                    <ListBox.InputBindings>
+                        <KeyBinding Key="Delete" Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBox}}, Path=DataContext.DeleteSelectedActionCommand}"/>
+                    </ListBox.InputBindings>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Action.Name}" />

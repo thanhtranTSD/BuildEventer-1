@@ -21,6 +21,9 @@
                           ItemsSource="{Binding Destinations, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AllowDrop="True"
                           SelectedIndex="{Binding SelectedIndex}"
                           SelectedItem="{Binding SelectedItem}">
+            <ListView.InputBindings>
+                <KeyBinding Key="Delete" Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListView}}, Path=DataContext.DeleteSelectedItemCommand}"/>
+            </ListView.InputBindings>
             <ListView.ItemContainerStyle>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenuDestinations}" />

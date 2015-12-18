@@ -14,7 +14,6 @@ limitations under the License.
  */
 
 using BuildEventer.Command;
-using BuildEventer.UI;
 using BuildEventer.ViewModels;
 using System.Windows;
 using System.Windows.Input;
@@ -26,14 +25,23 @@ namespace BuildEventer
         #region Constructor
         public MainWindowViewModel()
         {
-            string workingDirectoryPath = GetWorkingingDirectoryPath();
-            WorkingDirectoryViewDataContext = new WorkingDirectoryViewModel(workingDirectoryPath);
             m_ConfigurationActionViewDataContext = new ConfigurationActionViewModel();
         }
         #endregion
 
         #region Properties
-        public WorkingDirectoryViewModel WorkingDirectoryViewDataContext { get; private set; }
+        public WorkingDirectoryViewModel WorkingDirectoryViewDataContext
+        {
+            get { return m_WorkingDirectoryViewDataContext; }
+            set
+            {
+                if (m_WorkingDirectoryViewDataContext != value)
+                {
+                    m_WorkingDirectoryViewDataContext = value;
+                    OnPropertyChanged("WorkingDirectoryViewDataContext");
+                }
+            }
+        }
 
         public ConfigurationActionViewModel ConfigurationActionViewDataContext
         {
@@ -112,24 +120,8 @@ namespace BuildEventer
 
         #endregion Commands
 
-        #region Private Members
-        private string GetWorkingingDirectoryPath()
-        {
-            string returnPath = string.Empty;
-
-            StartUpDialogueViewModel startUpDialogueViewModel = new StartUpDialogueViewModel();
-            StartUpWindow startUpWindow = new StartUpWindow();
-            startUpWindow.DataContext = startUpDialogueViewModel;
-            if (true == startUpWindow.ShowDialog())
-            {
-                returnPath = startUpDialogueViewModel.WorkingDirectoryPath;
-            }
-
-            return returnPath;
-        }
-        #endregion
-
         #region Members
+        private WorkingDirectoryViewModel m_WorkingDirectoryViewDataContext;
         private ConfigurationActionViewModel m_ConfigurationActionViewDataContext;
 
         private ICommand m_GenerateXMLCommand;

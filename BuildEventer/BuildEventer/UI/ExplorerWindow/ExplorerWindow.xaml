@@ -5,10 +5,9 @@
         xmlns:converter="clr-namespace:BuildEventer.Converters"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:behaviors="clr-namespace:BuildEventer.Behaviors"
-        Title="ExplorerWindow" Height="500" Width="400"
+        Title="Explorer Window" Height="700" Width="1000"
         Background="White"
-        WindowStartupLocation="CenterScreen"
-        behaviors:CommonBehavior.LoadedCommand ="{Binding LoadedCommand}">
+        WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="{x:Type Button}">
             <Setter Property="FontSize" Value="13"/>

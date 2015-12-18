@@ -14,7 +14,9 @@ limitations under the License.
  */
 
 using BuildEventer.Dialog;
+using BuildEventer.ViewModels;
 using MahApps.Metro.Controls;
+using System;
 using System.Windows;
 
 namespace BuildEventer
@@ -38,6 +40,17 @@ namespace BuildEventer
             e.Cancel = true;
 
             MessageBoxDialog messageDialog = new MessageBoxDialog();
+            ConfigurationActionViewModel configurationActionViewModel = ((MainWindowViewModel)this.DataContext).ConfigurationActionViewDataContext;
+            if (null != configurationActionViewModel.SelectedActionViewModel)
+            {
+                SettingsViewModelBase selectedActionViewModel = configurationActionViewModel.SelectedActionViewModel;
+                if (true == selectedActionViewModel.IsChanged)
+                {
+                    messageDialog.Show(QuitApplication, "Warning", String.Format("The action {0} are not saved. Do you want to quit application?", selectedActionViewModel.Action.Name), MessageBoxButton.YesNo);
+                    return;
+                }
+            }
+
             messageDialog.Show(QuitApplication, "Quit application?", "Do you want to quit application?", MessageBoxButton.YesNo);
         }
 
