@@ -191,7 +191,7 @@ namespace BuildEventer.ViewModels
             string path = XMLManager.GetPathToSaveFile();
             if (null != path)
             {
-                XMLManager.GenerateXmlFile(path, m_ActionViewModels);
+                XMLManager.GenerateConfigurationFile(path, m_ActionViewModels);
             }
         }
 
@@ -207,7 +207,7 @@ namespace BuildEventer.ViewModels
             if (null != path)
             {
                 ActionViewModels.Clear();
-                ActionViewModels = XMLManager.LoadXmlFile(path);
+                ActionViewModels = XMLManager.LoadConfigurationFile(path);
                 SelectedViewModelsIndex(m_ActionViewModels.Count - 1);
             }
         }

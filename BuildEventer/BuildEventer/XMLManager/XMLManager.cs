@@ -15,12 +15,13 @@ limitations under the License.
 
 using BuildEventer.Models;
 using BuildEventer.ViewModels;
+using BuildEventerDAL;
+using BuildEventerDAL.Data;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Xml;
 
 namespace BuildEventer
 {
@@ -60,77 +61,29 @@ namespace BuildEventer
         /// <summary>
         /// Load all the actions in the XML file.
         /// </summary>
-        public static ObservableCollection<SettingsViewModelBase> LoadXmlFile(string filePath)
+        public static ObservableCollection<SettingsViewModelBase> LoadConfigurationFile(string filePath)
         {
             ObservableCollection<SettingsViewModelBase> returnList = new ObservableCollection<SettingsViewModelBase>();
-            XmlDocument xmlDocument = new XmlDocument();
-            xmlDocument.Load(filePath);
 
-            // Select the Action node in the XML file
-            XmlNodeList actionList = xmlDocument.SelectNodes(XML_ACTION_PATH);
-            foreach (XmlNode action in actionList)
+            List<IActionData> actionDataList = DataAccessLayer.LoadFile(filePath);
+
+            foreach (IActionData actionData in actionDataList)
             {
-                // Get the name and type attribute
-                string name = action.Attributes.GetNamedItem(XML_NAME_ATTRIBUTE).Value;
-                string type = action.Attributes.GetNamedItem(XML_TYPE_ATTRIBUTE).Value;
+                Type actionType = Type.GetType(actionData.Type);
+                Object actionInstance = Activator.CreateInstance(actionType, actionData);
+                SettingsViewModelBase actionViewModel = Factories.SettingsViewModelFactory.Instance().CreateSettingsViewModel(actionType.Name, actionInstance);
 
-                // Select the Sources node and get all the paths
-                XmlNode sourceList = action.SelectSingleNode(XML_SOURCES_NODE);
-                List<DragDropData> sources = new List<DragDropData>();
-                foreach (XmlNode node in sourceList)
-                {
-                    DragDropData data = new DragDropData(node.InnerText);
-                    sources.Add(data);
-                }
-
-                // Select the Destinations node and get all the paths
-                XmlNode destinationList = action.SelectSingleNode(XML_DESTINATIONS_NODE);
-                List<DragDropData> destinations = new List<DragDropData>();
-                foreach (XmlNode node in destinationList)
-                {
-                    DragDropData data = new DragDropData(node.InnerText);
-                    destinations.Add(data);
-                }
-
-                // Get the type an action
-                Type actionType = Type.GetType(type);
-
-                // Create instance with input arguments
-                object[] arguments = new object[3] { name, sources, destinations };
-                Object actionInstance = Activator.CreateInstance(actionType, arguments);
-
-                SettingsViewModelBase copyActionVM = Factories.SettingsViewModelFactory.Instance().CreateSettingsViewModel(actionType.Name, actionInstance);
-
-                returnList.Add(copyActionVM);
+                returnList.Add(actionViewModel);
             }
 
             return returnList;
         }
 
-        /// <summary>
-        /// Save all the actions into XML file
-        /// </summary>
-        public static void GenerateXmlFile(string filePath, ObservableCollection<SettingsViewModelBase> actionViewModels)
+        public static void GenerateConfigurationFile(string filePath, ObservableCollection<SettingsViewModelBase> actionViewModels)
         {
-            XmlDocument doc = new XmlDocument();
-            // Declare the format for XML file
-            XmlDeclaration declaration = doc.CreateXmlDeclaration(XML_VERSION, XML_ENCODING, null);
-            doc.AppendChild(declaration);
+            List<IActionData> actionsData = ConvertActionViewModelToActionData(actionViewModels);
 
-            // Create the Object node in XML file
-            XmlElement objectNode = doc.CreateElement(XML_OBJECT_NODE);
-
-            // Create the Actions node in XML file
-            XmlElement actionsNode = doc.CreateElement(XML_ACTIONS_NODE);
-
-            // Create an Action node
-            foreach (SettingsViewModelBase actionVM in actionViewModels)
-            {
-                ActionViewModelToXML(actionVM, ref actionsNode, ref doc);
-            }
-            objectNode.AppendChild(actionsNode);
-            doc.AppendChild(objectNode);
-            doc.Save(filePath);
+            DataAccessLayer.GenerateFile(filePath, actionsData);
         }
         #endregion
 
@@ -143,55 +96,53 @@ namespace BuildEventer
             return (T)Enum.Parse(typeof(T), value, true);
         }
 
-        /// <summary>
-        /// Generate the XML action node from the input action's viewmodel.
-        /// </summary>
-        private static void ActionViewModelToXML(SettingsViewModelBase actionViewModel, ref XmlElement actionsNode, ref XmlDocument document)
+        private static List<IActionData> ConvertActionViewModelToActionData(ObservableCollection<SettingsViewModelBase> viewModels)
         {
-            string viewModelName = actionViewModel.GetType().Name;
+            List<IActionData> returnList = new List<IActionData>();
 
-            eActionViewModel enumViewModel = ParseEnum<eActionViewModel>(viewModelName);
-            switch (enumViewModel)
+            foreach (SettingsViewModelBase viewModel in viewModels)
             {
-                case eActionViewModel.CopyActionViewModel:
-                    {
-                        actionsNode.AppendChild(CopyActionViewModelToXMLNode((CopyActionViewModel)actionViewModel, ref document));
-                        break;
-                    }
-                default: break;
-            }
-        }
+                string viewModelName = viewModel.GetType().Name;
 
-        #region For CopyActionViewModel
-        /// <summary>
-        /// Create a node from a list of paths
-        /// </summary>
-        private static XmlNode PathsToXMLNode(List<DragDropData> listPath, string nodeName, ref XmlDocument document)
-        {
-            XmlElement xmlNode = document.CreateElement(nodeName);
-
-            foreach (DragDropData path in listPath)
-            {
-                XmlElement pathNode = document.CreateElement(XML_PATH_NODE);
-                pathNode.InnerText = path.Path;
-                xmlNode.AppendChild(pathNode);
+                eActionViewModel enumViewModel = ParseEnum<eActionViewModel>(viewModelName);
+                switch (enumViewModel)
+                {
+                    case eActionViewModel.CopyActionViewModel:
+                        {
+                            returnList.Add(ConvertCopyViewModelToCopyData((CopyActionViewModel)viewModel));
+                            break;
+                        }
+                    default: break;
+                }
             }
 
-            return xmlNode;
+            return returnList;
+        }
+
+        #region Convert for CopyAction
+        /// <summary>
+        /// Converts CopyAction viewmodel to CopyAction data.
+        /// </summary>
+        private static CopyActionData ConvertCopyViewModelToCopyData(CopyActionViewModel copyActionViewModel)
+        {
+            string name = copyActionViewModel.CopyAction.Name;
+            string type = copyActionViewModel.CopyAction.ClassType.FullName;
+            List<string> sources = ConvertPathsFromCopyViewModelToCopyData(copyActionViewModel.CopyAction.Sources);
+            List<string> destinations = ConvertPathsFromCopyViewModelToCopyData(copyActionViewModel.CopyAction.Destinations);
+            return new CopyActionData(name, type, sources, destinations);
         }
 
         /// <summary>
-        /// Generate the copyaction viewmodel to XML node.
+        /// Converts paths including sources and destinations in CopyAction viewmodel to paths in CopyAction data.
         /// </summary>
-        private static XmlNode CopyActionViewModelToXMLNode(CopyActionViewModel copyActionVM, ref XmlDocument document)
+        private static List<string> ConvertPathsFromCopyViewModelToCopyData(List<DragDropData> paths)
         {
-            XmlElement actionNode = document.CreateElement(XML_ACTION_NODE);
-            actionNode.SetAttribute(XML_NAME_ATTRIBUTE, copyActionVM.CopyAction.Name);
-            actionNode.SetAttribute(XML_TYPE_ATTRIBUTE, copyActionVM.CopyAction.ClassType.FullName);
-            actionNode.AppendChild(PathsToXMLNode(copyActionVM.CopyAction.Sources, XML_SOURCES_NODE, ref document));
-            actionNode.AppendChild(PathsToXMLNode(copyActionVM.CopyAction.Destinations, XML_DESTINATIONS_NODE, ref document));
-
-            return actionNode;
+            List<string> returnList = new List<string>();
+            foreach (DragDropData path in paths)
+            {
+                returnList.Add(path.Path);
+            }
+            return returnList;
         }
         #endregion
 
@@ -203,24 +154,6 @@ namespace BuildEventer
         {
             CopyActionViewModel,
         }
-        #endregion
-
-        #region Constants
-        // For XML file
-        private const string XML_VERSION = "1.0";
-        private const string XML_ENCODING = "UTF-8";
-        private const string RELATIVE_PATH_SIGNATURE = ".";
-        private const string XML_OBJECT_NODE = "Object";
-        private const string XML_ACTIONS_NODE = "Actions";
-        private const string XML_ACTION_NODE = "Action";
-        private const string XML_ACTION_PATH = "/Object/Actions/Action";
-        private const string XML_SOURCES_NODE = "Sources";
-        private const string XML_DESTINATIONS_NODE = "Destinations";
-        private const string XML_PATH_NODE = "Path";
-        private const string XML_NAME_ATTRIBUTE = "Name";
-        private const string XML_TYPE_ATTRIBUTE = "Type";
-        private const string XML_IS_FOLDER_ATTRIBUTE = "IsFolder";
-        private const string XML_EXTENSION_ATTRIBUTE = "extension";
         #endregion
     }
 }
