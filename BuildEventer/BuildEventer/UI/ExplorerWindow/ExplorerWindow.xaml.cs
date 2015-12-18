@@ -25,7 +25,6 @@ namespace BuildEventer.UI
         public ExplorerWindow()
         {
             InitializeComponent();
-            this.DataContext = new ExplorerWindowViewModel();
         }
 
         private void ButtonOK_Click(object sender, RoutedEventArgs e)

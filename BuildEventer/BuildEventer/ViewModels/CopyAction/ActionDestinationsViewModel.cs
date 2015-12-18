@@ -33,7 +33,15 @@ namespace BuildEventer.ViewModels
         #endregion
 
         #region Properties
-        public BindingList<DragDropData> Destinations { get; private set; }
+        public BindingList<DragDropData> Destinations
+        {
+            get { return m_Destinations; }
+            private set
+            {
+                m_Destinations = value;
+                OnPropertyChanged("Destinations");
+            }
+        }
 
         public int SelectedIndex
         {
@@ -190,6 +198,7 @@ namespace BuildEventer.ViewModels
         #region Members
         private int m_SelectedIndex;
         private bool m_IsFocused;
+        private BindingList<DragDropData> m_Destinations;
         private ObservableCollection<DragDropData> m_DestinationsBackup;
 
         private ICommand m_DeleteSelectedItemCommand;

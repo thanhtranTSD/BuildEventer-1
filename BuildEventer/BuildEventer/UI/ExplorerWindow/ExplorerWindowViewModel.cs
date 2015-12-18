@@ -16,12 +16,10 @@ limitations under the License.
 using BuildEventer.Behaviors;
 using BuildEventer.Command;
 using BuildEventer.ViewModels;
-using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace BuildEventer.UI
 {
@@ -29,8 +27,11 @@ namespace BuildEventer.UI
     {
         #region Constructor
 
-        public ExplorerWindowViewModel()
-        { }
+        public ExplorerWindowViewModel(string path)
+        {
+            TreeLoaded();
+            ExpandToFolder(WorkingDirectory, path);
+        }
 
         #endregion
 
@@ -69,13 +70,7 @@ namespace BuildEventer.UI
             }
         }
 
-        public BindingList<TreeViewItem> WorkingDirectory
-        {
-            get
-            {
-                return m_WorkingDirectory;
-            }
-        }
+        public BindingList<TreeViewItem> WorkingDirectory { get; private set; }
 
         public bool? DialogResult
         {
@@ -95,9 +90,6 @@ namespace BuildEventer.UI
         #region Commands
 
         #region SelectedItemChangedCommand
-
-        private DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs> m_SelectedItemChangedCommand;
-
         public DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs> SelectedItemChangedCommand
         {
             get
@@ -114,19 +106,7 @@ namespace BuildEventer.UI
                 SelectedPath = treeViewItem.Tag.ToString();
             }
         }
-
         #endregion
-
-        #region LoadedCommand
-
-        public ICommand LoadedCommand
-        {
-            get
-            {
-                return m_LoadedCommand ?? (m_LoadedCommand = new DelegateCommand(param => TreeViewLoaded((RoutedEventArgs)param)));
-            }
-        }
-        #endregion LoadedCommand
 
         #endregion
 
@@ -160,36 +140,86 @@ namespace BuildEventer.UI
             }
         }
 
-        private void TreeViewLoaded(RoutedEventArgs e)
+        private void TreeLoaded()
         {
-            m_WorkingDirectory = new BindingList<TreeViewItem>();
+            WorkingDirectory = new BindingList<TreeViewItem>();
 
-            foreach (string s in Directory.GetLogicalDrives())
+            foreach (string driveName in Directory.GetLogicalDrives())
             {
-                TreeViewItem item = new TreeViewItem();
-                item.Header = s;
-                item.Tag = s;
-                item.FontWeight = FontWeights.Normal;
-                item.Items.Add(dummyNode);
-                item.Expanded += new RoutedEventHandler(FolderExpanded);
-
-                m_WorkingDirectory.Add(item);
+                DriveInfo driveInfo = new DriveInfo(driveName);
+                if (true == driveInfo.IsReady)
+                {
+                    TreeViewItem item = new TreeViewItem();
+                    item.Header = driveName;
+                    item.Tag = driveName;
+                    item.FontWeight = FontWeights.Normal;
+                    item.Items.Add(dummyNode);
+                    item.Expanded += new RoutedEventHandler(FolderExpanded);
+                    WorkingDirectory.Add(item);
+                }
             }
-            OnPropertyChanged("WorkingDirectory");
         }
 
+        private void ExpandItem(ItemCollection items, string node)
+        {
+            foreach (TreeViewItem item in items)
+            {
+                if (true == node.StartsWith(item.Tag.ToString()))
+                {
+                    item.IsExpanded = true;
+                    item.IsSelected = true;
+                    item.Focus();
+
+                    if (node == item.Tag.ToString())
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        ExpandItem(item.Items, node);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Expand the tree to the input node.
+        /// </summary>
+        private void ExpandToFolder(BindingList<TreeViewItem> treeViewItems, string node)
+        {
+            if (false == Directory.Exists(node))
+            {
+                return;
+            }
+
+            foreach (TreeViewItem item in treeViewItems)
+            {
+                if (true == node.StartsWith(item.Tag.ToString()))
+                {
+                    item.IsExpanded = true;
+                    item.IsSelected = true;
+                    item.Focus();
+
+                    if (node == item.Tag.ToString())
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        ExpandItem(item.Items, node);
+                    }
+                }
+            }
+        }
         #endregion
 
         #region Members
-
         private static string m_SelectedPath;
-        private static BindingList<TreeViewItem> m_WorkingDirectory;
         private static object dummyNode;
         private object m_SelectedItem;
         private bool? m_DialogResult;
 
-        private ICommand m_LoadedCommand;
-
+        private DelegateCommand<TreeViewHelper.DependencyPropertyEventArgs> m_SelectedItemChangedCommand;
         #endregion
 
         #region Constants

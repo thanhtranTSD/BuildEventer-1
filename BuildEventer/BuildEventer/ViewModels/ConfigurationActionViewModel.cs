@@ -131,18 +131,14 @@ namespace BuildEventer.ViewModels
                     if (null != m_SelectedActionViewModel)
                     {
                         m_SelectedViewModelValue = value;
-                        if (true == m_SelectedActionViewModel.IsChanged)
-                        {
-                            MessageBoxDialog messageDialog = new MessageBoxDialog();
-                            messageDialog.Show(SaveChangedCallback, "Confirm", String.Format("Do you want to save changed in {0}?", m_SelectedActionViewModel.Action.Name),
-                                               MessageBoxButton.YesNoCancel);
-                            return;
-                        }
                         if (false == m_SelectedActionViewModel.CanExecuteAction)
                         {
-                            MessageBoxDialog messageDialog = new MessageBoxDialog();
-                            messageDialog.Show(CanExecuteActionCallback, "Warning", String.Format("Sources or destinations of {0} cannot empty.", m_SelectedActionViewModel.Action.Name),
-                                               MessageBoxButton.OK);
+                            CanExecuteActionProcess(m_SelectedActionViewModel);
+                            return;
+                        }
+                        else if (true == m_SelectedActionViewModel.IsChanged)
+                        {
+                            SaveChangedProcess(m_SelectedActionViewModel);
                             return;
                         }
                     }
@@ -226,14 +222,17 @@ namespace BuildEventer.ViewModels
                 case MessageBoxResultButton.Yes:
                     {
                         m_SelectedActionViewModel.Update();
-                        isSavedProcess = true;
                         break;
                     }
                 // No
                 case MessageBoxResultButton.No:
                     {
-                        isSavedProcess = true;
                         m_SelectedActionViewModel.Restore();
+                        if (false == m_SelectedActionViewModel.CanExecuteAction)
+                        {
+                            CanExecuteActionProcess(m_SelectedActionViewModel);
+                            isSavedProcess = false;
+                        }
                         break;
                     }
                 // Cancel
@@ -254,7 +253,7 @@ namespace BuildEventer.ViewModels
                 m_SelectedActionViewModel = m_SelectedViewModelValue;
                 m_IsBackup = false;
                 BackupSelectedViewModel();
-                OnPropertyChanged("SelectedViewModel");
+                OnPropertyChanged("SelectedActionViewModel");
                 OnPropertyChanged("ActionViewModels");
             }
         }
@@ -269,6 +268,19 @@ namespace BuildEventer.ViewModels
             task.Start();
         }
         #endregion
+        private void CanExecuteActionProcess(SettingsViewModelBase viewModel)
+        {
+            MessageBoxDialog messageDialog = new MessageBoxDialog();
+            messageDialog.Show(CanExecuteActionCallback, "Warning", String.Format("Sources or destinations of {0} cannot empty.", viewModel.Action.Name),
+                               MessageBoxButton.OK);
+        }
+
+        private void SaveChangedProcess(SettingsViewModelBase viewModel)
+        {
+            MessageBoxDialog messageDialog = new MessageBoxDialog();
+            messageDialog.Show(SaveChangedCallback, "Confirm", String.Format("Do you want to save changed in {0}?", m_SelectedActionViewModel.Action.Name),
+                               MessageBoxButton.YesNoCancel);
+        }
 
         private void Initialize()
         {

@@ -67,6 +67,7 @@ namespace BuildEventer.UI
         private void OnBrowserCommand(RoutedEventArgs e)
         {
             ExplorerWindow explorerWindow = new ExplorerWindow();
+            explorerWindow.DataContext = new ExplorerWindowViewModel(WorkingDirectoryPath);
             if (true == explorerWindow.ShowDialog())
             {
                 WorkingDirectoryPath = explorerWindow.SelectedPath.Text;
